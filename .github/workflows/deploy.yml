@@ -26,21 +26,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select NEW website ZIP
+      - name: Select website ZIP
         id: zip
         shell: bash
         run: |
           set -e
 
-          ZIP_FILE="./mawred-reze9-notifications-fix.zip"
+          ZIP_FILE="./mawred-reze9-edit-delete.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: $ZIP_FILE not found."
-            echo "Upload the new ZIP with this exact name."
+            echo "Please upload the ZIP with this exact name."
             exit 1
           fi
 
-          echo "Using $ZIP_FILE"
+          echo "Using: $ZIP_FILE"
           echo "ZIP_FILE=$ZIP_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Extract website ZIP
@@ -56,15 +56,17 @@ jobs:
           INDEX="$(find extracted -type f -name 'index.html' | head -n 1)"
 
           if [ -z "$INDEX" ]; then
-            echo "ERROR: index.html was not found."
+            echo "ERROR: index.html was not found inside the ZIP."
             exit 1
           fi
 
           SITE_DIR="$(dirname "$INDEX")"
 
+          echo "Website folder: $SITE_DIR"
+
           cp -R "$SITE_DIR"/. dist/
 
-      - name: Verify NEW notification build
+      - name: Verify website files
         shell: bash
         run: |
           set -e
@@ -73,12 +75,24 @@ jobs:
           test -f dist/app.js
           test -f dist/config.js
 
-          if ! grep -q "notification-item" dist/app.js; then
-            echo "ERROR: notification code missing."
+          echo "Website files detected successfully."
+
+      - name: Verify edit and delete build
+        shell: bash
+        run: |
+          set -e
+
+          if ! grep -qi "تعديل" dist/app.js; then
+            echo "ERROR: Edit functionality was not detected."
             exit 1
           fi
 
-          echo "NEW notification build detected."
+          if ! grep -qi "حذف" dist/app.js; then
+            echo "ERROR: Delete functionality was not detected."
+            exit 1
+          fi
+
+          echo "Edit/Delete functionality detected successfully."
 
       - name: Bust browser cache
         shell: bash
@@ -90,7 +104,7 @@ jobs:
           sed -i "s#app.js#app.js?v=$SHA#g" dist/index.html
           sed -i "s#style.css#style.css?v=$SHA#g" dist/index.html
 
-          echo "Cache-busting version: $SHA"
+          echo "Cache bust version: $SHA"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
