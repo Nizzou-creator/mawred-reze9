@@ -19,38 +19,78 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Find website ZIP
+      - name: Select website ZIP
         id: zip
         shell: bash
         run: |
-          ZIP_FILE="$(find . -maxdepth 1 -type f -name '*.zip' | head -n 1)"
-          if [ -z "$ZIP_FILE" ]; then
-            echo "No website ZIP found in repository root."
-            exit 1
-          fi
-          echo "ZIP_FILE=$ZIP_FILE" >> "$GITHUB_OUTPUT"
+          set -e
+
+          for candidate in \
+            "./mawred-reze9-account-real.zip" \
+            "./mawred-reze9-v3-supabase-ready.zip" \
+            "./mawred-reze9-supabase-ready.zip" \
+            "./mawred-reze9-site.zip"
+          do
+            if [ -f "$candidate" ]; then
+              echo "Using $candidate"
+              echo "ZIP_FILE=$candidate" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+
+          echo "No supported Mawred Reze9 website ZIP found."
+          exit 1
 
       - name: Extract website ZIP
         shell: bash
         run: |
+          set -e
+
           rm -rf extracted dist
           mkdir -p extracted dist
+
           unzip -q "${{ steps.zip.outputs.ZIP_FILE }}" -d extracted
 
           INDEX="$(find extracted -type f -name 'index.html' | head -n 1)"
+
           if [ -z "$INDEX" ]; then
             echo "index.html was not found inside the ZIP."
             exit 1
           fi
 
           SITE_DIR="$(dirname "$INDEX")"
+
           cp -R "$SITE_DIR"/. dist/
+
+      - name: Check real account system
+        shell: bash
+        run: |
+          set -e
+
+          if grep -Rqi "صفحة الحساب جاهزة للربط" dist; then
+            echo "ERROR: Old account placeholder detected."
+            echo "Deployment stopped."
+            exit 1
+          fi
+
+          if [ ! -f "dist/config.js" ]; then
+            echo "ERROR: config.js missing."
+            exit 1
+          fi
+
+          if [ ! -f "dist/app.js" ]; then
+            echo "ERROR: app.js missing."
+            exit 1
+          fi
+
+          echo "Real account files detected successfully."
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
