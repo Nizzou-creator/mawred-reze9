@@ -2,8 +2,7 @@ name: Deploy Mawred Reze9
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -20,18 +19,38 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract website ZIP
+      - name: Find website ZIP
+        id: zip
+        shell: bash
         run: |
-          rm -rf site
-          mkdir site
-          unzip -o mawred-reze9-v1.zip -d site
+          ZIP_FILE="$(find . -maxdepth 1 -type f -name '*.zip' | head -n 1)"
+          if [ -z "$ZIP_FILE" ]; then
+            echo "No website ZIP found in repository root."
+            exit 1
+          fi
+          echo "ZIP_FILE=$ZIP_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Extract website ZIP
+        shell: bash
+        run: |
+          rm -rf extracted dist
+          mkdir -p extracted dist
+          unzip -q "${{ steps.zip.outputs.ZIP_FILE }}" -d extracted
+
+          INDEX="$(find extracted -type f -name 'index.html' | head -n 1)"
+          if [ -z "$INDEX" ]; then
+            echo "index.html was not found inside the ZIP."
+            exit 1
+          fi
+
+          SITE_DIR="$(dirname "$INDEX")"
+          cp -R "$SITE_DIR"/. dist/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -39,7 +58,7 @@ jobs:
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./site
+          path: dist
 
       - name: Deploy
         id: deployment
