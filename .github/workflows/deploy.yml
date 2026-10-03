@@ -26,27 +26,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select website ZIP
+      - name: Select NEW website ZIP
         id: zip
         shell: bash
         run: |
           set -e
 
-          for candidate in \
-            "./mawred-reze9-account-real.zip" \
-            "./mawred-reze9-v3-supabase-ready.zip" \
-            "./mawred-reze9-supabase-ready.zip" \
-            "./mawred-reze9-site.zip"
-          do
-            if [ -f "$candidate" ]; then
-              echo "Using $candidate"
-              echo "ZIP_FILE=$candidate" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-          done
+          ZIP_FILE="./mawred-reze9-notifications-fix.zip"
 
-          echo "No supported Mawred Reze9 website ZIP found."
-          exit 1
+          if [ ! -f "$ZIP_FILE" ]; then
+            echo "ERROR: $ZIP_FILE not found."
+            echo "Upload the new ZIP with this exact name."
+            exit 1
+          fi
+
+          echo "Using $ZIP_FILE"
+          echo "ZIP_FILE=$ZIP_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Extract website ZIP
         shell: bash
@@ -61,7 +56,7 @@ jobs:
           INDEX="$(find extracted -type f -name 'index.html' | head -n 1)"
 
           if [ -z "$INDEX" ]; then
-            echo "index.html was not found inside the ZIP."
+            echo "ERROR: index.html was not found."
             exit 1
           fi
 
@@ -69,28 +64,33 @@ jobs:
 
           cp -R "$SITE_DIR"/. dist/
 
-      - name: Check real account system
+      - name: Verify NEW notification build
         shell: bash
         run: |
           set -e
 
-          if grep -Rqi "صفحة الحساب جاهزة للربط" dist; then
-            echo "ERROR: Old account placeholder detected."
-            echo "Deployment stopped."
+          test -f dist/index.html
+          test -f dist/app.js
+          test -f dist/config.js
+
+          if ! grep -q "notification-item" dist/app.js; then
+            echo "ERROR: notification code missing."
             exit 1
           fi
 
-          if [ ! -f "dist/config.js" ]; then
-            echo "ERROR: config.js missing."
-            exit 1
-          fi
+          echo "NEW notification build detected."
 
-          if [ ! -f "dist/app.js" ]; then
-            echo "ERROR: app.js missing."
-            exit 1
-          fi
+      - name: Bust browser cache
+        shell: bash
+        run: |
+          set -e
 
-          echo "Real account files detected successfully."
+          SHA="${GITHUB_SHA}"
+
+          sed -i "s#app.js#app.js?v=$SHA#g" dist/index.html
+          sed -i "s#style.css#style.css?v=$SHA#g" dist/index.html
+
+          echo "Cache-busting version: $SHA"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
