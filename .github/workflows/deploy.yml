@@ -1,82 +1,87 @@
 name: Unzip uploaded zip files
 
 on:
-push:
-branches: [main]
-paths:
-- '**.zip'
-workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.zip'
+  workflow_dispatch:
 
 permissions:
-contents: write
+  contents: write
 
 jobs:
-unzip:
-runs-on: ubuntu-latest
+  unzip:
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  - name: Unzip uploaded ZIP files
-    shell: bash
-    run: |
-      shopt -s nullglob globstar
-      found=0
+      - name: Unzip uploaded ZIP files
+        shell: bash
+        run: |
+          set -e
 
-      for z in **/*.zip; do
-        found=1
+          shopt -s nullglob globstar
 
-        echo "========================================"
-        echo "Processing ZIP: $z"
-        echo "========================================"
+          found=0
 
-        zip_dir="$(dirname "$z")"
-        tmp="$(mktemp -d)"
+          for z in **/*.zip; do
+            found=1
 
-        unzip -o -q "$z" -d "$tmp"
+            echo "========================================"
+            echo "Processing ZIP: $z"
+            echo "========================================"
 
-        entries=("$tmp"/*)
+            zip_dir="$(dirname "$z")"
+            tmp="$(mktemp -d)"
 
-        # If ZIP contains one wrapper folder,
-        # use its contents instead of creating another folder.
-        if [ "${#entries[@]}" -eq 1 ] && [ -d "${entries[0]}" ]; then
-          src="${entries[0]}"
-        else
-          src="$tmp"
-        fi
+            unzip -o -q "$z" -d "$tmp"
 
-        echo "Copying files to: $zip_dir"
+            entries=("$tmp"/*)
 
-        # Copy everything from ZIP to repository,
-        # but NEVER replace this workflow.
-        rsync -a \
-          --exclude='.github/' \
-          "$src"/ "$zip_dir"/
+            # إذا الـZIP فيه مجلد واحد خارجي،
+            # ناخذ المحتوى متاعه مباشرة.
+            if [ "${#entries[@]}" -eq 1 ] && [ -d "${entries[0]}" ]; then
+              src="${entries[0]}"
+            else
+              src="$tmp"
+            fi
 
-        # Remove uploaded ZIP after extraction.
-        git rm -f "$z"
+            echo "Copying files to: $zip_dir"
 
-        rm -rf "$tmp"
+            # ننسخو الملفات للـRoot
+            # ونمنعو تماماً استبدال ملفات GitHub Actions.
+            rsync -a \
+              --exclude='.github/' \
+              "$src"/ "$zip_dir"/
 
-        echo "ZIP extracted successfully."
-      done
+            # نحذف الـZIP بعد الاستخراج
+            git rm -f "$z"
 
-      if [ "$found" -eq 0 ]; then
-        echo "No ZIP file found."
-      fi
+            rm -rf "$tmp"
 
-  - name: Commit extracted files
-    shell: bash
-    run: |
-      git config user.name "github-actions[bot]"
-      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            echo "ZIP extracted successfully."
 
-      git add -A
+          done
 
-      if git diff --cached --quiet; then
-        echo "Nothing to commit."
-      else
-        git commit -m "Auto-unzip uploaded ZIP"
-        git push
-      fi
+          if [ "$found" -eq 0 ]; then
+            echo "No ZIP file found."
+          fi
+
+      - name: Commit extracted files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "Auto-unzip uploaded ZIP"
+            git push
+          fi
