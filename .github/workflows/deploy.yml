@@ -1,12 +1,12 @@
-name: Deploy MREMMA from ZIP
+name: Mareema - Deploy Mawred Rezq
 
-on:
+'on':
   push:
     branches:
       - main
     paths:
       - "mawred-reze9-FIXED.zip"
-      - ".github/workflows/deploy.yml"
+      - ".github/workflows/mareema-deploy.yml"
   workflow_dispatch:
 
 permissions:
@@ -15,52 +15,53 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: mareema-pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  mareema-deploy:
+    name: Mareema - Deploy Mawred Rezq
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract ZIP to temporary site
+      - name: Extract ZIP to temporary Mareema site
         shell: bash
         run: |
           set -e
 
-          echo "Extracting website..."
+          echo "Starting Mareema deployment..."
 
-          rm -rf site
-          mkdir -p site
+          rm -rf mareema-site
+          mkdir -p mareema-site
 
-          unzip -q "mawred-reze9-FIXED.zip" -d site
+          unzip -q "mawred-reze9-FIXED.zip" -d mareema-site
 
-          if [ ! -f "site/index.html" ]; then
-            first_dir="$(find site -mindepth 1 -maxdepth 1 -type d | head -n 1 || true)"
+          if [ ! -f "mareema-site/index.html" ]; then
+            first_dir="$(find mareema-site -mindepth 1 -maxdepth 1 -type d | head -n 1 || true)"
 
             if [ -n "$first_dir" ] && [ -f "$first_dir/index.html" ]; then
-              cp -a "$first_dir"/. site/
+              cp -a "$first_dir"/. mareema-site/
             fi
           fi
 
-          test -f "site/index.html"
+          test -f "mareema-site/index.html"
 
-          echo "Website extracted successfully."
+          echo "Mareema website extracted successfully."
 
-      - name: Fix Account button
+      - name: Fix Mareema Account button
         shell: bash
         run: |
           set -e
 
-          if [ -f "site/app.js" ] && grep -q "function handleAccount" site/app.js; then
+          if [ -f "mareema-site/app.js" ] && grep -q "function handleAccount" mareema-site/app.js; then
 
             python3 - <<'PY'
 from pathlib import Path
 
-p = Path("site/app.js")
+p = Path("mareema-site/app.js")
 s = p.read_text(encoding="utf-8")
 
 if "window.handleAccount = handleAccount" not in s:
@@ -78,23 +79,24 @@ if "window.handleAccount = handleAccount" not in s:
 
     p.write_text(s, encoding="utf-8")
 
-    print("Account button fix applied.")
+    print("Mareema Account fix applied.")
+
 else:
-    print("Account button fix already exists.")
+    print("Mareema Account fix already exists.")
 PY
 
           else
-            echo "handleAccount not found."
+            echo "handleAccount not found; continuing."
           fi
 
-      - name: Configure GitHub Pages
+      - name: Configure Mareema Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload Pages artifact
+      - name: Upload Mareema Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./site
+          path: ./mareema-site
 
-      - name: Deploy Pages
+      - name: Deploy Mareema Pages
         id: deployment
         uses: actions/deploy-pages@v4
