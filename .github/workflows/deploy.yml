@@ -22,20 +22,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare website from ZIP
+      - name: Extract ZIP to temporary site
         shell: bash
         run: |
           set -e
 
-          echo "Preparing website..."
+          echo "Extracting website..."
 
           rm -rf site
           mkdir -p site
@@ -52,7 +48,7 @@ jobs:
 
           test -f "site/index.html"
 
-          echo "index.html found successfully."
+          echo "Website extracted successfully."
 
       - name: Fix Account button
         shell: bash
@@ -61,49 +57,34 @@ jobs:
 
           if [ -f "site/app.js" ] && grep -q "function handleAccount" site/app.js; then
 
-            if ! grep -q "window.handleAccount = handleAccount" site/app.js; then
-
-              python3 - <<'PY'
+            python3 - <<'PY'
 from pathlib import Path
 
 p = Path("site/app.js")
 s = p.read_text(encoding="utf-8")
 
-needle = '$("#accountTop")?.addEventListener("click",handleAccount);'
+if "window.handleAccount = handleAccount" not in s:
 
-if needle in s:
-    s = s.replace(
-        needle,
-        'window.handleAccount = handleAccount;\n' + needle,
-        1
-    )
-else:
-    marker = '\nasync function myListings(){'
+    needle = '$(\"#accountTop\")?.addEventListener(\"click\",handleAccount);'
 
-    if marker in s:
+    if needle in s:
         s = s.replace(
-            marker,
-            '\nwindow.handleAccount = handleAccount;\n' + marker,
+            needle,
+            'window.handleAccount = handleAccount;\n' + needle,
             1
         )
     else:
         s += '\nwindow.handleAccount = handleAccount;\n'
 
-p.write_text(s, encoding="utf-8")
+    p.write_text(s, encoding="utf-8")
+
+    print("Account button fix applied.")
+else:
+    print("Account button fix already exists.")
 PY
 
-              echo "Account button fix applied."
-
-            else
-
-              echo "Account button fix already exists."
-
-            fi
-
           else
-
-            echo "handleAccount/app.js not found; continuing."
-
+            echo "handleAccount not found."
           fi
 
       - name: Configure GitHub Pages
@@ -114,6 +95,6 @@ PY
         with:
           path: ./site
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
