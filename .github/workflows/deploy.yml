@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '**.zip'
+      - "**.zip"
   workflow_dispatch:
 
 permissions:
@@ -42,8 +42,6 @@ jobs:
 
             entries=("$tmp"/*)
 
-            # إذا الـZIP فيه مجلد واحد خارجي،
-            # ناخذ المحتوى متاعه مباشرة.
             if [ "${#entries[@]}" -eq 1 ] && [ -d "${entries[0]}" ]; then
               src="${entries[0]}"
             else
@@ -52,19 +50,15 @@ jobs:
 
             echo "Copying files to: $zip_dir"
 
-            # ننسخو الملفات للـRoot
-            # ونمنعو تماماً استبدال ملفات GitHub Actions.
             rsync -a \
               --exclude='.github/' \
               "$src"/ "$zip_dir"/
 
-            # نحذف الـZIP بعد الاستخراج
             git rm -f "$z"
 
             rm -rf "$tmp"
 
             echo "ZIP extracted successfully."
-
           done
 
           if [ "$found" -eq 0 ]; then
