@@ -131,6 +131,9 @@ async function handleAccount(){
   $("#logoutBtn").onclick=async()=>{await sb.auth.signOut();closeModal();toast("خرجت من الحساب.");};
 }
 
+$("#accountTop")?.addEventListener("click",handleAccount);
+$("#accountBtn")?.addEventListener("click",handleAccount);
+
 async function myListings(){
   if(!currentUser){authForm("login");return;}
   const {data,error}=await sb.from("listings").select("id,listing_type,title,description,category,price,price_label,governorate,delegation,phone,status,is_featured,created_at").eq("owner_id",currentUser.id).order("created_at",{ascending:false});
