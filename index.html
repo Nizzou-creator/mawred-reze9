@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b1020">
   <meta name="description" content="مورد رزق — إلقى الخدمة، الحريف، ولا السلعة اللي تلزمك.">
   <title>مورد رزق | إلقى اللي يلزمك</title>
-  <link rel="stylesheet" href="style.css?v=admin-panel-4">
+  <link rel="stylesheet" href="style.css?v=admin-panel-5">
 </head>
 <body>
   <header class="nav">
@@ -14,6 +14,7 @@
       <span class="brand-mark">م</span>
       <span>مورد <b>رزق</b></span>
     </a>
+
     <nav id="navLinks">
       <a class="active" href="#home">الرئيسية</a>
       <a href="#discover">اكتشف</a>
@@ -21,36 +22,59 @@
       <a href="#messages">الرسائل</a>
       <a href="#my-listings" id="myListingsNav">إعلاناتي</a>
     </nav>
+
     <div class="nav-actions">
       <button class="icon-btn" id="searchTop" aria-label="بحث">⌕</button>
-      <button class="icon-btn notification-btn" id="notificationsBtn" aria-label="الإشعارات">🔔<span id="notificationBadge" class="notification-badge" hidden>0</span></button>
+      <button class="icon-btn notification-btn" id="notificationsBtn" aria-label="الإشعارات">
+        🔔<span id="notificationBadge" class="notification-badge" hidden>0</span>
+      </button>
       <button class="account-btn" id="accountTop">تسجيل الدخول</button>
       <button class="menu-btn" id="menuBtn">☰</button>
     </div>
   </header>
 
   <main id="home">
+
     <section class="hero">
-      <div class="glow glow-one"></div><div class="glow glow-two"></div>
+      <div class="glow glow-one"></div>
+      <div class="glow glow-two"></div>
+
       <div class="hero-inner">
-        <div class="pill"><span class="pulse"></span> أكثر من مجرد منصة إعلانات</div>
-        <h1>رزقي و رزقك على الله.<br><em>توكلنا على الله.</em></h1>
-        <p class="hero-copy">إلقى الخدمة، الحريف، ولا السلعة اللي تلزمك — الكل في بلاصة وحدة، قريب ليك.</p>
+        <div class="pill">
+          <span class="pulse"></span>
+          أكثر من مجرد منصة إعلانات
+        </div>
+
+        <h1>
+          رزقي و رزقك على الله.<br>
+          <em>توكلنا على الله.</em>
+        </h1>
+
+        <p class="hero-copy">
+          إلقى الخدمة، الحريف، ولا السلعة اللي تلزمك — الكل في بلاصة وحدة، قريب ليك.
+        </p>
 
         <div class="smart-search" id="smartSearch">
           <div class="search-field">
             <span>⌕</span>
             <input id="searchInput" placeholder="شنوّة تلوج؟ مثال: كهربائي، هاتف..." autocomplete="off">
           </div>
+
           <div class="location-field">
             <span>⌖</span>
             <select id="locationSelect">
               <option value="">كل تونس</option>
-              <option>تونس</option><option>سوسة</option><option>صفاقس</option>
-              <option>المنستير</option><option>نابل</option><option>بنزرت</option>
-              <option>قابس</option><option>مدنين</option>
+              <option>تونس</option>
+              <option>سوسة</option>
+              <option>صفاقس</option>
+              <option>المنستير</option>
+              <option>نابل</option>
+              <option>بنزرت</option>
+              <option>قابس</option>
+              <option>مدنين</option>
             </select>
           </div>
+
           <button id="searchBtn" class="search-btn">إبحث</button>
         </div>
 
@@ -73,55 +97,113 @@
 
     <section id="discover" class="section">
       <div class="section-title">
-        <div><span class="overline">استكشف</span><h2>شنوّة تلقى هنا؟</h2></div>
+        <div>
+          <span class="overline">استكشف</span>
+          <h2>شنوّة تلقى هنا؟</h2>
+        </div>
         <a href="#listings">شوف الكل ←</a>
       </div>
+
       <div class="categories">
-        <button class="cat cat-purple" data-search="خدمات"><span>🛠️</span><b>خدمات</b><small>إلقى شكون يخدمها</small></button>
-        <button class="cat cat-orange" data-search="منتجات"><span>🛍️</span><b>منتجات</b><small>شوف السلع المعروضة</small></button>
-        <button class="cat cat-blue" data-search="حرفيين"><span>👨‍🔧</span><b>حرفيين</b><small>ناس تخدم باحتراف</small></button>
-        <button class="cat cat-green" data-search="محلات"><span>🏪</span><b>محلات وبائعين</b><small>قريبين منك</small></button>
+        <button class="cat cat-purple" data-search="خدمات">
+          <span>🛠️</span>
+          <b>خدمات</b>
+          <small>إلقى شكون يخدمها</small>
+        </button>
+
+        <button class="cat cat-orange" data-search="منتجات">
+          <span>🛍️</span>
+          <b>منتجات</b>
+          <small>شوف السلع المعروضة</small>
+        </button>
+
+        <button class="cat cat-blue" data-search="حرفيين">
+          <span>👨‍🔧</span>
+          <b>حرفيين</b>
+          <small>ناس تخدم باحتراف</small>
+        </button>
+
+        <button class="cat cat-green" data-search="محلات">
+          <span>🏪</span>
+          <b>محلات وبائعين</b>
+          <small>قريبين منك</small>
+        </button>
       </div>
     </section>
 
     <section class="section listings-section" id="listings">
       <div class="section-title">
-        <div><span class="overline">اختيارات اليوم</span><h2>إعلانات تستاهل تشوفها</h2></div>
+        <div>
+          <span class="overline">اختيارات اليوم</span>
+          <h2>إعلانات تستاهل تشوفها</h2>
+        </div>
         <button class="filter-btn" id="filterBtn">⚙ تصفية</button>
       </div>
+
       <div class="listing-grid">
+
         <article class="listing">
-          <div class="listing-top"><div class="avatar purple">ك</div><span class="verified">✓ موثوق</span></div>
+          <div class="listing-top">
+            <div class="avatar purple">ك</div>
+            <span class="verified">✓ موثوق</span>
+          </div>
           <span class="tag">خدمة</span>
           <h3>كهربائي منزلية</h3>
           <p>تركيب، إصلاح الأعطال، إنارة وتجهيزات كهربائية.</p>
-          <div class="listing-meta"><span>📍 سوسة</span><span>⭐ 4.9</span></div>
+          <div class="listing-meta">
+            <span>📍 سوسة</span>
+            <span>⭐ 4.9</span>
+          </div>
           <button class="talk-btn">💬 تواصل</button>
         </article>
+
         <article class="listing">
-          <div class="listing-top"><div class="avatar orange">م</div><span class="verified">✓ موثوق</span></div>
+          <div class="listing-top">
+            <div class="avatar orange">م</div>
+            <span class="verified">✓ موثوق</span>
+          </div>
           <span class="tag orange-tag">منتجات</span>
           <h3>عالم إكسسوارات</h3>
           <p>كفرات، شواحن، سماعات وملحقات للهواتف.</p>
-          <div class="listing-meta"><span>📍 تونس</span><span>⭐ 4.8</span></div>
+          <div class="listing-meta">
+            <span>📍 تونس</span>
+            <span>⭐ 4.8</span>
+          </div>
           <button class="talk-btn">💬 تواصل</button>
         </article>
+
         <article class="listing">
-          <div class="listing-top"><div class="avatar blue">A</div><span class="verified">✓ موثوق</span></div>
+          <div class="listing-top">
+            <div class="avatar blue">A</div>
+            <span class="verified">✓ موثوق</span>
+          </div>
           <span class="tag blue-tag">خدمة</span>
           <h3>تطوير مواقع وتطبيقات</h3>
           <p>نصمملك موقع أو تطبيق احترافي حسب احتياج مشروعك.</p>
-          <div class="listing-meta"><span>📍 المنستير</span><span>⭐ 5.0</span></div>
+          <div class="listing-meta">
+            <span>📍 المنستير</span>
+            <span>⭐ 5.0</span>
+          </div>
           <button class="talk-btn">💬 تواصل</button>
         </article>
+
       </div>
     </section>
 
     <section class="why section">
       <div class="why-copy">
         <span class="overline">علاش مورد رزق؟</span>
-        <h2>المكان اللي يقرّب<br><em>الناس ببعضها.</em></h2>
-        <p>ما نفرضوش عليك كيفاش تبيع ولا كيفاش تخلص. إنت تلقى الشخص المناسب، تتواصل معاه، وتتفاهموا بالطريقة اللي تناسبكم.</p>
+
+        <h2>
+          المكان اللي يقرّب<br>
+          <em>الناس ببعضها.</em>
+        </h2>
+
+        <p>
+          ما نفرضوش عليك كيفاش تبيع ولا كيفاش تخلص.
+          إنت تلقى الشخص المناسب، تتواصل معاه، وتتفاهموا بالطريقة اللي تناسبكم.
+        </p>
+
         <div class="check-list">
           <div><i>✓</i><span>التسجيل مجاني</span></div>
           <div><i>✓</i><span>النشر الأساسي مجاني</span></div>
@@ -129,47 +211,106 @@
           <div><i>✓</i><span>رسائل مباشرة بين الطرفين</span></div>
         </div>
       </div>
+
       <div class="visual-card">
         <div class="mini-window">
-          <div class="mini-head"><span></span><span></span><span></span></div>
+          <div class="mini-head">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
           <div class="mini-content">
             <div class="mini-search">⌕ &nbsp; سباك في سوسة</div>
-            <div class="mini-result"><div class="mini-avatar">س</div><div><b>سباك محترف</b><small>📍 سوسة · ⭐ 4.9</small></div><button>تواصل</button></div>
-            <div class="mini-result"><div class="mini-avatar second">ع</div><div><b>خدمات منزلية</b><small>📍 سوسة · ⭐ 4.8</small></div><button>تواصل</button></div>
+
+            <div class="mini-result">
+              <div class="mini-avatar">س</div>
+              <div>
+                <b>سباك محترف</b>
+                <small>📍 سوسة · ⭐ 4.9</small>
+              </div>
+              <button>تواصل</button>
+            </div>
+
+            <div class="mini-result">
+              <div class="mini-avatar second">ع</div>
+              <div>
+                <b>خدمات منزلية</b>
+                <small>📍 سوسة · ⭐ 4.8</small>
+              </div>
+              <button>تواصل</button>
+            </div>
           </div>
         </div>
-        <div class="float-card"><strong>+ 24</strong><small>إعلان جديد اليوم</small></div>
+
+        <div class="float-card">
+          <strong>+ 24</strong>
+          <small>إعلان جديد اليوم</small>
+        </div>
       </div>
     </section>
 
     <section id="publish" class="join-section">
       <div class="join-inner">
-        <div><span class="overline light">عندك حاجة تقدمها؟</span><h2>حوّل خدمتك ولا سلعتك<br>إلى <em>مورد رزق.</em></h2><p>انشر إعلانك الأساسي مجانًا وخلي الناس تلقاك.</p></div>
-        <button class="join-btn" id="publishBtn">ابدأ وانشر مجانًا <span>←</span></button>
+        <div>
+          <span class="overline light">عندك حاجة تقدمها؟</span>
+          <h2>
+            حوّل خدمتك ولا سلعتك<br>
+            إلى <em>مورد رزق.</em>
+          </h2>
+          <p>انشر إعلانك الأساسي مجانًا وخلي الناس تلقاك.</p>
+        </div>
+
+        <button class="join-btn" id="publishBtn">
+          ابدأ وانشر مجانًا <span>←</span>
+        </button>
       </div>
     </section>
 
     <section id="messages" class="section bottom-grid">
-      <div class="feature-box"><span class="feature-icon">💬</span><h3>تواصل مباشرة</h3><p>الرسائل تخليك تتفاهم مع صاحب الخدمة أو الحريف بسهولة.</p><button class="link-btn" id="messagesBtn">افتح الرسائل ←</button></div>
-      <div class="feature-box"><span class="feature-icon">🔔</span><h3>خليك على علم</h3><p>إشعارات للرسائل والردود والتحديثات المهمة على إعلاناتك.</p><button class="link-btn" id="accountBtn">إنشاء حساب ←</button></div>
+
+      <div class="feature-box">
+        <span class="feature-icon">💬</span>
+        <h3>تواصل مباشرة</h3>
+        <p>الرسائل تخليك تتفاهم مع صاحب الخدمة أو الحريف بسهولة.</p>
+        <button class="link-btn" id="messagesBtn">افتح الرسائل ←</button>
+      </div>
+
+      <div class="feature-box">
+        <span class="feature-icon">🔔</span>
+        <h3>خليك على علم</h3>
+        <p>إشعارات للرسائل والردود والتحديثات المهمة على إعلاناتك.</p>
+        <button class="link-btn" id="accountBtn">إنشاء حساب ←</button>
+      </div>
+
     </section>
+
   </main>
 
   <footer>
-    <div class="footer-brand"><span class="brand-mark">م</span><b>مورد رزق</b></div>
+    <div class="footer-brand">
+      <span class="brand-mark">م</span>
+      <b>مورد رزق</b>
+    </div>
+
     <p>إلقى الخدمة، الحريف، ولا السلعة اللي تلزمك. 🇹🇳</p>
     <small>© 2026 مورد رزق — منصة تونسية</small>
   </footer>
+
   <div id="modalRoot" class="modal-root" aria-hidden="true">
     <div class="modal-backdrop" data-close-modal></div>
+
     <div class="modal-card" role="dialog" aria-modal="true">
       <button class="modal-close" data-close-modal aria-label="إغلاق">×</button>
       <div id="modalContent"></div>
     </div>
   </div>
+
   <div id="toast" class="toast"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=admin-panel-4"></script>
+  <script src="app.js?v=admin-panel-5"></script>
+
 </body>
 </html>
