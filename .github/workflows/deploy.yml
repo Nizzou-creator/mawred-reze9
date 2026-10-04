@@ -2,10 +2,8 @@ name: Mareema - Deploy Mawred Rezq
 
 on:
   workflow_dispatch:
-
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: read
@@ -18,26 +16,23 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy Mareema
+    name: Deploy Mareema + Android APK
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Extract website
         run: |
           set -e
-
           rm -rf mareema-site
-          mkdir mareema-site
+          mkdir -p mareema-site
 
           unzip -q mawred-reze9-FIXED.zip -d mareema-site
 
           if [ ! -f mareema-site/index.html ]; then
             DIR=$(find mareema-site -mindepth 1 -maxdepth 1 -type d | head -n 1)
-
             if [ -n "$DIR" ] && [ -f "$DIR/index.html" ]; then
               cp -a "$DIR"/. mareema-site/
             fi
@@ -45,7 +40,57 @@ jobs:
 
           test -f mareema-site/index.html
 
-          echo "Mareema website ready."
+      - name: Setup Java
+        if: ${{ hashFiles('mareema-site/android/**') != '' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build Android APK
+        if: ${{ hashFiles('mareema-site/android/**') != '' }}
+        working-directory: mareema-site/android
+        run: |
+          set -e
+
+          gradle wrapper --gradle-version 8.7
+
+          ./gradlew assembleRelease
+
+          test -f app/build/outputs/apk/release/app-release.apk
+
+          cp app/build/outputs/apk/release/app-release.apk ../mawred-reze9.apk
+
+      - name: Add download button
+        run: |
+          set -e
+
+          if [ -f mareema-site/mawred-reze9.apk ]; then
+
+            python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("mareema-site/index.html")
+          s = p.read_text(encoding="utf-8")
+
+          if 'id="app-download-button"' not in s:
+
+              button = '''<a id="app-download-button"
+          href="mawred-reze9.apk"
+          download
+          style="position:fixed;right:16px;bottom:16px;z-index:9999;
+          display:flex;align-items:center;gap:8px;padding:12px 16px;
+          border-radius:999px;background:#111827;color:#fff;
+          text-decoration:none;font-weight:700;
+          box-shadow:0 8px 24px rgba(0,0,0,.25);">
+          📱 تحميل التطبيق
+          </a>'''
+
+              s = s.replace("</body>", button + "\n</body>")
+              p.write_text(s, encoding="utf-8")
+          PY
+
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -56,4 +101,5 @@ jobs:
           path: mareema-site
 
       - name: Deploy website
+        id: deployment
         uses: actions/deploy-pages@v4
