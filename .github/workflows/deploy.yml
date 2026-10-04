@@ -35,17 +35,13 @@ jobs:
         run: |
           set -e
 
-          echo "📦 Preparing website..."
+          echo "Preparing website..."
 
           rm -rf site
           mkdir -p site
 
           unzip -q "mawred-reze9-FIXED.zip" -d site
 
-          echo "📂 ZIP extracted temporarily into site/"
-
-          # If ZIP contains one main folder, use its contents
-          # as the website root.
           if [ ! -f "site/index.html" ]; then
             first_dir="$(find site -mindepth 1 -maxdepth 1 -type d | head -n 1 || true)"
 
@@ -54,23 +50,20 @@ jobs:
             fi
           fi
 
-          # Make sure the website exists
           test -f "site/index.html"
 
-          echo "✅ index.html found"
+          echo "index.html found successfully."
 
       - name: Fix Account button
         shell: bash
         run: |
           set -e
 
-          if [ -f "site/app.js" ]; then
+          if [ -f "site/app.js" ] && grep -q "function handleAccount" site/app.js; then
 
-            if grep -q "function handleAccount" site/app.js; then
+            if ! grep -q "window.handleAccount = handleAccount" site/app.js; then
 
-              if ! grep -q "window.handleAccount = handleAccount" site/app.js; then
-
-                python3 - <<'PY'
+              python3 - <<'PY'
 from pathlib import Path
 
 p = Path("site/app.js")
@@ -99,18 +92,18 @@ else:
 p.write_text(s, encoding="utf-8")
 PY
 
-                echo "✅ Account button fix applied"
-
-              else
-                echo "ℹ️ Account button fix already exists"
-              fi
+              echo "Account button fix applied."
 
             else
-              echo "⚠️ handleAccount function not found"
+
+              echo "Account button fix already exists."
+
             fi
 
           else
-            echo "⚠️ app.js not found"
+
+            echo "handleAccount/app.js not found; continuing."
+
           fi
 
       - name: Configure GitHub Pages
