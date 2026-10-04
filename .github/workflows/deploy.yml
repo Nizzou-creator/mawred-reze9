@@ -1,0 +1,126 @@
+name: Deploy MREMMA from ZIP
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "mawred-reze9-FIXED.zip"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare website from ZIP
+        shell: bash
+        run: |
+          set -e
+
+          echo "📦 Preparing website..."
+
+          rm -rf site
+          mkdir -p site
+
+          unzip -q "mawred-reze9-FIXED.zip" -d site
+
+          echo "📂 ZIP extracted temporarily into site/"
+
+          # If ZIP contains one main folder, use its contents
+          # as the website root.
+          if [ ! -f "site/index.html" ]; then
+            first_dir="$(find site -mindepth 1 -maxdepth 1 -type d | head -n 1 || true)"
+
+            if [ -n "$first_dir" ] && [ -f "$first_dir/index.html" ]; then
+              cp -a "$first_dir"/. site/
+            fi
+          fi
+
+          # Make sure the website exists
+          test -f "site/index.html"
+
+          echo "✅ index.html found"
+
+      - name: Fix Account button
+        shell: bash
+        run: |
+          set -e
+
+          if [ -f "site/app.js" ]; then
+
+            if grep -q "function handleAccount" site/app.js; then
+
+              if ! grep -q "window.handleAccount = handleAccount" site/app.js; then
+
+                python3 - <<'PY'
+from pathlib import Path
+
+p = Path("site/app.js")
+s = p.read_text(encoding="utf-8")
+
+needle = '$("#accountTop")?.addEventListener("click",handleAccount);'
+
+if needle in s:
+    s = s.replace(
+        needle,
+        'window.handleAccount = handleAccount;\n' + needle,
+        1
+    )
+else:
+    marker = '\nasync function myListings(){'
+
+    if marker in s:
+        s = s.replace(
+            marker,
+            '\nwindow.handleAccount = handleAccount;\n' + marker,
+            1
+        )
+    else:
+        s += '\nwindow.handleAccount = handleAccount;\n'
+
+p.write_text(s, encoding="utf-8")
+PY
+
+                echo "✅ Account button fix applied"
+
+              else
+                echo "ℹ️ Account button fix already exists"
+              fi
+
+            else
+              echo "⚠️ handleAccount function not found"
+            fi
+
+          else
+            echo "⚠️ app.js not found"
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
