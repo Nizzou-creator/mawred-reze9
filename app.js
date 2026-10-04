@@ -1,6 +1,13 @@
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
+/* show JS errors on screen (helps debugging on phones) */
+window.addEventListener("error",e=>{try{const el=document.querySelector("#toast");if(el){el.textContent="خطأ: "+(e.message||"غير معروف");el.classList.add("show");}}catch(_){}});
+/* account buttons: delegated click so it always works */
+document.addEventListener("click",e=>{
+  if(e.target.closest&&e.target.closest("#accountTop,#accountBtn")){e.preventDefault();handleAccount();}
+});
+
 const cfg = window.APP_CONFIG || {};
 const sb = (window.supabase && cfg.supabaseUrl && cfg.supabasePublishableKey)
   ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabasePublishableKey)
@@ -131,8 +138,6 @@ async function handleAccount(){
   $("#logoutBtn").onclick=async()=>{await sb.auth.signOut();closeModal();toast("خرجت من الحساب.");};
 }
 
-$("#accountTop")?.addEventListener("click",handleAccount);
-$("#accountBtn")?.addEventListener("click",handleAccount);
 
 async function myListings(){
   if(!currentUser){authForm("login");return;}
