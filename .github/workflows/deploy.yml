@@ -1,119 +1,50 @@
-name: Deploy Mawred Reze9
+name: Unzip uploaded zip files
 
 on:
   push:
     branches: [main]
+    paths:
+      - '**.zip'
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  contents: write
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
+  unzip:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Select website ZIP
-        id: zip
-        shell: bash
+      - name: Unzip every zip file found in the repo
         run: |
-          set -e
+          shopt -s nullglob globstar
+          found=0
+          for z in **/*.zip; do
+            found=1
+            echo "Unzipping $z"
+            tmp=$(mktemp -d)
+            unzip -o -q "$z" -d "$tmp"
+            entries=("$tmp"/*)
+            if [ ${#entries[@]} -eq 1 ] && [ -d "${entries[0]}" ]; then
+              src="${entries[0]}"
+            else
+              src="$tmp"
+            fi
+            cp -a "$src"/. "$(dirname "$z")"/
+            git rm -q -f "$z"
+            rm -rf "$tmp"
+          done
+          if [ "$found" -eq 0 ]; then echo "No zip file found."; fi
 
-          ZIP_FILE="./mawred-reze9-edit-delete.zip"
-
-          if [ ! -f "$ZIP_FILE" ]; then
-            echo "ERROR: $ZIP_FILE not found."
-            echo "Please upload the ZIP with this exact name."
-            exit 1
+      - name: Commit extracted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "Auto-unzip uploaded zip"
+            git push
           fi
-
-          echo "Using: $ZIP_FILE"
-          echo "ZIP_FILE=$ZIP_FILE" >> "$GITHUB_OUTPUT"
-
-      - name: Extract website ZIP
-        shell: bash
-        run: |
-          set -e
-
-          rm -rf extracted dist
-          mkdir -p extracted dist
-
-          unzip -q "${{ steps.zip.outputs.ZIP_FILE }}" -d extracted
-
-          INDEX="$(find extracted -type f -name 'index.html' | head -n 1)"
-
-          if [ -z "$INDEX" ]; then
-            echo "ERROR: index.html was not found inside the ZIP."
-            exit 1
-          fi
-
-          SITE_DIR="$(dirname "$INDEX")"
-
-          echo "Website folder: $SITE_DIR"
-
-          cp -R "$SITE_DIR"/. dist/
-
-      - name: Verify website files
-        shell: bash
-        run: |
-          set -e
-
-          test -f dist/index.html
-          test -f dist/app.js
-          test -f dist/config.js
-
-          echo "Website files detected successfully."
-
-      - name: Verify edit and delete build
-        shell: bash
-        run: |
-          set -e
-
-          if ! grep -qi "تعديل" dist/app.js; then
-            echo "ERROR: Edit functionality was not detected."
-            exit 1
-          fi
-
-          if ! grep -qi "حذف" dist/app.js; then
-            echo "ERROR: Delete functionality was not detected."
-            exit 1
-          fi
-
-          echo "Edit/Delete functionality detected successfully."
-
-      - name: Bust browser cache
-        shell: bash
-        run: |
-          set -e
-
-          SHA="${GITHUB_SHA}"
-
-          sed -i "s#app.js#app.js?v=$SHA#g" dist/index.html
-          sed -i "s#style.css#style.css?v=$SHA#g" dist/index.html
-
-          echo "Cache bust version: $SHA"
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload website
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
