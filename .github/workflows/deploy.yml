@@ -6,7 +6,8 @@ name: Mareema - Deploy Mawred Rezq
       - main
     paths:
       - "mawred-reze9-FIXED.zip"
-      - ".github/workflows/mareema-deploy.yml"
+      - ".github/workflows/deploy.yml"
+
   workflow_dispatch:
 
 permissions:
@@ -24,15 +25,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract ZIP to temporary Mareema site
+      - name: Check ZIP
         shell: bash
         run: |
           set -e
 
-          echo "Starting Mareema deployment..."
+          echo "Checking Mareema ZIP..."
+
+          if [ ! -f "mawred-reze9-FIXED.zip" ]; then
+            echo "ERROR: mawred-reze9-FIXED.zip not found."
+            exit 1
+          fi
+
+          echo "ZIP found successfully."
+
+      - name: Extract ZIP
+        shell: bash
+        run: |
+          set -e
+
+          echo "Extracting Mareema website..."
 
           rm -rf mareema-site
           mkdir -p mareema-site
@@ -40,63 +56,85 @@ jobs:
           unzip -q "mawred-reze9-FIXED.zip" -d mareema-site
 
           if [ ! -f "mareema-site/index.html" ]; then
-            first_dir="$(find mareema-site -mindepth 1 -maxdepth 1 -type d | head -n 1 || true)"
+
+            first_dir="$(find mareema-site \
+              -mindepth 1 \
+              -maxdepth 1 \
+              -type d \
+              | head -n 1 || true)"
 
             if [ -n "$first_dir" ] && [ -f "$first_dir/index.html" ]; then
               cp -a "$first_dir"/. mareema-site/
             fi
+
           fi
 
-          test -f "mareema-site/index.html"
+          if [ ! -f "mareema-site/index.html" ]; then
+            echo "ERROR: index.html not found."
+            exit 1
+          fi
 
           echo "Mareema website extracted successfully."
 
-      - name: Fix Mareema Account button
+      - name: Fix Account button
         shell: bash
         run: |
           set -e
 
-          if [ -f "mareema-site/app.js" ] && grep -q "function handleAccount" mareema-site/app.js; then
+          if [ -f "mareema-site/app.js" ]; then
 
-            python3 - <<'PY'
+            if grep -q "function handleAccount" mareema-site/app.js; then
+
+              python3 - <<'PY'
 from pathlib import Path
 
 p = Path("mareema-site/app.js")
 s = p.read_text(encoding="utf-8")
 
+fix = """window.handleAccount = handleAccount;
+$("#accountTop")?.addEventListener("click",handleAccount);
+$("#accountBtn")?.addEventListener("click",handleAccount);
+
+"""
+
 if "window.handleAccount = handleAccount" not in s:
 
-    needle = '$(\"#accountTop\")?.addEventListener(\"click\",handleAccount);'
+    marker = "async function myListings(){"
 
-    if needle in s:
+    if marker in s:
         s = s.replace(
-            needle,
-            'window.handleAccount = handleAccount;\n' + needle,
+            marker,
+            fix + marker,
             1
         )
     else:
-        s += '\nwindow.handleAccount = handleAccount;\n'
+        s += "\n" + fix
 
     p.write_text(s, encoding="utf-8")
 
-    print("Mareema Account fix applied.")
+    print("Account button fix applied.")
 
 else:
-    print("Mareema Account fix already exists.")
+    print("Account button fix already exists.")
+
 PY
 
+            else
+              echo "handleAccount not found."
+            fi
+
           else
-            echo "handleAccount not found; continuing."
+            echo "app.js not found."
           fi
 
-      - name: Configure Mareema Pages
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload Mareema Pages artifact
+      - name: Upload Mareema website
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./mareema-site
 
-      - name: Deploy Mareema Pages
+      - name: Deploy Mareema website
         id: deployment
         uses: actions/deploy-pages@v4
