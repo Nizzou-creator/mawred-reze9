@@ -22,7 +22,7 @@ jobs:
 
     steps:
 
-      # 1. تحميل المشروع
+      # 1. تحميل ملفات المشروع
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -37,7 +37,7 @@ jobs:
 
           unzip -q mawred-reze9-FIXED.zip -d mareema-site
 
-          # إذا كان الـZIP يحتوي مجلد رئيسي
+          # إذا كان داخل ZIP مجلد رئيسي
           if [ ! -f mareema-site/index.html ]; then
             DIR=$(find mareema-site -mindepth 1 -maxdepth 1 -type d | head -n 1)
 
@@ -46,16 +46,16 @@ jobs:
             fi
           fi
 
-          # التأكد أن الموقع موجود
+          # التأكد من وجود الموقع
           if [ ! -f mareema-site/index.html ]; then
-            echo "ERROR: index.html not found"
+            echo "ERROR: index.html not found."
             find mareema-site -maxdepth 3 -type f | head -100
             exit 1
           fi
 
           echo "Website extracted successfully."
 
-      # 3. تجهيز Java للأندرويد
+      # 3. تجهيز Java
       - name: Setup Java
         if: ${{ hashFiles('mareema-site/android/**') != '' }}
         uses: actions/setup-java@v4
@@ -63,7 +63,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # 4. بناء APK
+      # 4. بناء APK موقّع Debug
       - name: Build Android APK
         if: ${{ hashFiles('mareema-site/android/**') != '' }}
         working-directory: mareema-site/android
@@ -71,21 +71,21 @@ jobs:
         run: |
           set -e
 
-          echo "Starting Android build..."
+          echo "Preparing Android build..."
 
           # إنشاء Gradle Wrapper
           gradle wrapper --gradle-version 8.7
 
-          # بناء نسخة Release
-          ./gradlew assembleRelease
+          echo "Building signed Debug APK..."
 
-          echo "Gradle build finished."
+          ./gradlew assembleDebug
 
-          # البحث عن أي APK تم إنتاجه
-          APK_FILE="$(find app/build/outputs -type f -name '*.apk' | head -n 1)"
+          echo "Searching for generated APK..."
+
+          APK_FILE="$(find app/build/outputs/apk/debug -type f -name '*.apk' | head -n 1)"
 
           if [ -z "$APK_FILE" ]; then
-            echo "ERROR: No APK was generated."
+            echo "ERROR: Debug APK was not generated."
 
             echo "Available build files:"
             find app/build/outputs -type f 2>/dev/null || true
@@ -94,36 +94,33 @@ jobs:
           fi
 
           echo "APK found:"
-          echo "$APK_FILE"
+          ls -lh "$APK_FILE"
 
-          # نسخ APK إلى الموقع
+          # نسخ APK إلى مجلد الموقع
           cp "$APK_FILE" ../mawred-reze9.apk
 
-          # التأكد من النسخ
           if [ ! -f ../mawred-reze9.apk ]; then
             echo "ERROR: APK copy failed."
             exit 1
           fi
 
-          echo "APK copied successfully."
-
+          echo "APK ready:"
           ls -lh ../mawred-reze9.apk
 
-      # 5. إضافة زر تحميل التطبيق للموقع
+      # 5. إضافة زر تحميل التطبيق
       - name: Add APK download button
         shell: bash
         run: |
           set -e
 
-          if [ -f mareema-site/android/../mawred-reze9.apk ]; then
+          if [ -f mareema-site/mawred-reze9.apk ]; then
 
-            echo "Adding APK download button..."
+            echo "APK detected."
 
             python3 <<'PY'
           from pathlib import Path
 
           p = Path("mareema-site/index.html")
-
           s = p.read_text(encoding="utf-8")
 
           if 'id="app-download-button"' not in s:
@@ -162,23 +159,23 @@ jobs:
               print("Download button added.")
 
           else:
-              print("Download button already exists.")
+              echo = "APK not found. Button was not added."
+              print(echo)
 
           PY
 
-            # نسخ الـAPK من مكانه إلى جذر الموقع
-            cp mareema-site/mawred-reze9.apk mareema-site/mawred-reze9.apk 2>/dev/null || true
-
           else
-            echo "WARNING: APK not found. Website will still deploy."
+            echo "WARNING: APK not found."
           fi
 
-      # 6. التأكد من وجود APK قبل النشر
+      # 6. التأكد النهائي من APK
       - name: Verify APK
         shell: bash
         run: |
           if [ -f mareema-site/mawred-reze9.apk ]; then
-            echo "APK ready:"
+            echo "======================================"
+            echo "APK READY FOR DOWNLOAD"
+            echo "======================================"
             ls -lh mareema-site/mawred-reze9.apk
           else
             echo "WARNING: APK is not available."
